@@ -24,8 +24,8 @@ int isBlankRow[Size];
 int tBlankCol[Size1]; // t : training.raw 
 int tBlankRow[Size2]; // t : training.raw 
 int flag, c, i, j, a, b, bits, ID, quotient, remainderNum;
-double captchaVec[5][10];
-double trainVector[5][10];
+float captchaVec[5][10];
+float trainVector[5][5];
 int trainCoord[70][5]; 
 // for word whose ID == 12, int trainCoord[12][1] stores which row is the word's
 // top boundary .  top-down-left-right
@@ -38,11 +38,19 @@ int trainRow[5][2] = { {7,52},{53,98},{99,145},{146,191},{192,237} };
 
 /*********************************************************************/
 
-void get_bitQ(int left,int right,int top,int down, int wordID)
+void get_bitQ(int left,int right,int top,int down, int wordID, int option)
 {
 	int Q[5];
 	for( i=0; i<5; i++ ) Q[i] = 0; 
 	int cc = 1, xxx=0;
+	
+	/**************
+		
+		option == 1   --->   get the bit quads from rmvBg[][]  ("captcha.raw" )
+		option == 2   --->   get the bit quads from trmvBg[][] ("training.raw")
+		
+	/**************/
+	printf("   ID: %d", wordID);
    for( i=top; i<down; i++ ){
 		//printf("\n\n");
 		for( j=left; j<right; j++ ){
@@ -52,47 +60,60 @@ void get_bitQ(int left,int right,int top,int down, int wordID)
 		   
 			for( a=i; a<i+2; a++ ){
 				for( b=j; b<j+2; b++ ){
-					if( rmvBg[a][b] == 0 ) bits++;
+					if( option ==1 ){
+						if( rmvBg[a][b] == 0 ) bits++;
+					}
 				}
 			}
 			if( bits == 1 ) {
-				//printf("\n%d  hi  ", i ); 
+				printf("\n%d  hi  ", i ); 
 				Q[0]++;
 			}
 			if( bits == 2 ) {
 				//printf("\n%d  yo  ", i );
-				if( ( rmvBg[a][b]==255 && rmvBg[a+1][b+1]==0 ) || ( rmvBg[a][b]==0 && rmvBg[a+1][b+1]==255 ) ){
-					Q[4] ++;
-				} 
-				else{
-					Q[1]++;
+				if( option == 1 ){
+					if( ( rmvBg[a][b]==255 && rmvBg[a+1][b+1]==0 ) || ( rmvBg[a][b]==0 && rmvBg[a+1][b+1]==255 ) ){
+						Q[4] ++;
+					} 
+					else{ Q[1]++;	}
 				}
+				
+				if( option == 2 ){
+					if( ( trmvBg[a][b]==255 && trmvBg[a+1][b+1]==0 ) || ( trmvBg[a][b]==0 && trmvBg[a+1][b+1]==255 ) ){
+						Q[4] ++;
+					} 
+					else{ Q[1]++;	}
+				}
+				
 			}
-			if( bits == 3 ) {
-				//printf("\n%d  yeee  ", i );
-				Q[2]++;
-			}
-			if( bits == 4 ) {
-				//printf("\n%d  UUuuu  ", i );
-				Q[3]++;
-			}
-			if( bits == 0 ) {
-				xxx ++;
-			
-			} // End - 3 - if
+			if( bits == 3 ) {			Q[2]++;     }
+			if( bits == 4 ) {			Q[3]++;  	}
+			//if( bits == 0 ) {     	xxx ++;	} // End - 3 - if
 				
 		}	// End - 2 - for 
    } // End - 1 - for 
-   
-   for( i=0; i<5; i++ ) printf("\n     %d", Q[i] );
-   printf("\n     %d", xxx );
-   
-   /* Area */
-   captchaVec[wordID][0] = 0.25*Q[0] + 0.5*Q[1] + 0.875*Q[2] + Q[3] + 0.75*Q[4]; 
-   /* Perimeter */
-	captchaVec[wordID][1] = (Q[0] + Q[2] + 2*Q[4])*(1/sqrt(2)) + Q[1]; 
-   /* Euler Number using 8-Connectivity */
-	captchaVec[wordID][2] =  0.25 * (Q[0] - Q[2] - 2*Q[4]);
+  
+  if( option == 1 ){
+   	/* Area */
+   	captchaVec[wordID][0] = 0.25*Q[0] + 0.5*Q[1] + 0.875*Q[2] + Q[3] + 0.75*Q[4]; 
+   	/* Perimeter */
+		captchaVec[wordID][1] = (Q[0] + Q[2] + 2*Q[4])*(1/sqrt(2)) + Q[1]; 
+   	/* Euler Number using 8-Connectivity */
+		captchaVec[wordID][2] =  0.25 * (Q[0] - Q[2] - 2*Q[4]);
+	}
+
+
+  if( option == 2 ){
+   	/* Area */
+   	trainVector[wordID][0] = 0.25*Q[0] + 0.5*Q[1] + 0.875*Q[2] + Q[3] + 0.75*Q[4]; 
+   	/* Perimeter */
+		trainVector[wordID][1] = (Q[0] + Q[2] + 2*Q[4])*(1/sqrt(2)) + Q[1]; 
+   	/* Euler Number using 8-Connectivity */
+		trainVector[wordID][2] =  0.25 * (Q[0] - Q[2] - 2*Q[4]);
+	}
+	
+
+
 }
 
 /*********************************************************************/
@@ -145,7 +166,6 @@ int main( int argc, char *argv[])
 			} // End - 3 - if 
 			if( Imagedata[i][j] <= 50 ){
 				rmvBg[i][j] = (unsigned char) 0;
-				printf("  %d ¡@", rmvBg[i][j] ); 
 			}
 		} // End - 2 - for 
 	} // End - 1 - for 
@@ -251,15 +271,12 @@ int main( int argc, char *argv[])
 
 
 
-	//int top, down, left, right;
+
 	for( ID=0; ID<70; ID++ ){
 		quotient = (int) ( (ID) / 14 );
 		remainderNum = ID - ( 14 * quotient );
 		if(ID==3)
 		printf("\n %d divided by 14 is %d, remainder is %d", ID, quotient, remainderNum );
-	
-		trainVector[ID][9] = quotient;
-		//trainVector[ID][10] = (double) remainder;
 	
 /***********************************	
 	int trainCol[14][2] = {   { 5,36},{ 37,68}, { 69,99}, { 100,131}, {132,162}, 
@@ -274,23 +291,30 @@ int main( int argc, char *argv[])
 		trainCoord[ID][3] = trainCol[remainderNum][1];
 		if(ID==3) printf(" \nID 3 top is %d", trainCoord[ID][0] );
 	}
-
-	for( ID=0; ID<20; ID++ ){
-			printf("\n ID %d: top %d down %d %d %d", ID, trainCoord[ID][0],trainCoord[ID][1],trainCoord[ID][2],trainCoord[ID][3]);
-
-		}
+	
 
 
-	get_bitQ( 101, 108, 120, 180, 1);
+	get_bitQ( 101, 108, 120, 180, 1, 1);
 
 
 						/********************************************/
 						/******                                ******/
-						/******     Constructing Element Type I 
-						/******     8-Neighbor
+						/******    compute trainVector by calling bitQ() function
+						/******     
 						/******                                ******/
 						/********************************************/	
 
+	int top, down, left, right;
+	for( ID=0; ID<70; ID++ ){
+		top  = trainCoord[ID][0];
+		down = trainCoord[ID][1];
+		left = trainCoord[ID][2];
+		right= trainCoord[ID][3];
+		get_bitQ( top, down, left, right, ID, 2 );
+	}
+	
+	
+	
 	
 						/********************************************/
 						/******                                ******/
