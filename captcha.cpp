@@ -1,5 +1,3 @@
-/* Ver. 6 */
-
 
 #include "stdio.h"
 #include "iostream.h"
@@ -30,6 +28,7 @@ int tBlankRow[Size2]; // t : training.raw
 int flag, c, i, j, a, b, bits, ID, quotient, remainderNum;
 float captchaVec[5][10];
 float trainVector[5][5];
+float diff[5][70];   // difference between captcha and training vectors 
 int trainCoord[70][4]; 
 // for word whose ID == 12, int trainCoord[12][1] stores which row is the word's
 // top boundary .  top-down-left-right
@@ -55,7 +54,7 @@ void get_bitQ(int left,int right,int top,int down, int wordID, int option)
 		option == 2   --->   get the bit quads from trmvBg[][] ("training.raw")
 		
 	/**************/
-	printf("   ID: %d", wordID);
+	printf("\n   ID: %d", wordID);
    for( i=top; i<down; i++ ){
 		//printf("\n\n");
 		for( j=left; j<right; j++ ){
@@ -65,13 +64,18 @@ void get_bitQ(int left,int right,int top,int down, int wordID, int option)
 		   
 			for( a=i; a<i+2; a++ ){
 				for( b=j; b<j+2; b++ ){
-					if( option ==1 ){
+					if( option == 1 ){
 						if( rmvBg[a][b] == 0 ) bits++;
+					}				
+					if( option == 2 ){
+						if( trmvBg[a][b] == 0 ) bits++;
 					}
 				}
 			}
+			
+			
+			/***************/
 			if( bits == 1 ) {
-				printf("\n%d  hi  ", i ); 
 				Q[0]++;
 			}
 			if( bits == 2 ) {
@@ -117,7 +121,13 @@ void get_bitQ(int left,int right,int top,int down, int wordID, int option)
 		trainVector[wordID][2] =  0.25 * (Q[0] - Q[2] - 2*Q[4]);
 	}
 	
-
+	if( wordID == 4 ){
+			printf("\n\n\nleft:%d right:%d top %d down%d", left,right,top,down);
+	for( i=0; i<5; i++ ){
+	
+		printf("\n ID is %d Q  %d.", ID, Q[i] );
+	}
+}
 
 }
 
@@ -187,27 +197,17 @@ int main( int argc, char *argv[])
 	}
 		
 						/* * * * * * * * * * * * * * * * * */
-						/* Partly blocking*/
-						/* * * * * * * * * * * * * * * * * */	
-						
-	for( i=0; i<238; i++   ){
-		for( j=0; j<450; j++ ){
-			trmvBg[i][j] = (unsigned char) 0; 
-		}
-	}
-
-	
-	/***********************************************
+						/* turn trmvBg[][] into binary image*/
+						/* * * * * * * * * * * * * * * * * */
+	/***********************************************/
 	for( i=0; i<Size1; i++ ){
 		for( j=0; j<Size2; j++ ){
 			if( trainImg[i][j] >= 100){
 				trmvBg[i][j] = (unsigned char) 255;
-			} // End - 3 - if 
-		
+			} 
 			if( trainImg[i][j] <= 100 ){trmvBg[i][j] = (unsigned char) 0;}
-		
-		} // End - 2 - for 
-	} // End - 1 - for 
+		}  
+	}
 	/***********************************************/
 
 
@@ -231,12 +231,13 @@ int main( int argc, char *argv[])
 		if( isBlankCol[j-1]==1 && isBlankCol[j]==0 ){
 			c++;
 			//printf("   Hey  %d ", c);
-			wordPos[c-1][1] = j;
+			wordPos[c-1][0] = j;
 		}
-		if( isBlankCol[j+1]==1 && isBlankCol[j]==0 ){wordPos[c-1][2] = j;}
+		if( isBlankCol[j+1]==1 && isBlankCol[j]==0 ){
+			wordPos[c-1][1] = j;}
 	}	
 	
-	for(i=0;i<5;i++) printf("\n   %d   %d  ", wordPos[i][1], wordPos[i][2] ); 
+	//for(i=0;i<5;i++) printf("\n   %d   %d  ", wordPos[i][0], wordPos[i][1] ); 
 /*--------------------------------------------------------------------------**/
 
 
@@ -263,9 +264,7 @@ int main( int argc, char *argv[])
 	c = 0;
 	for( i=0; i<Size1; i++ ){
 		if( tBlankRow[i-1]==1 && tBlankRow[i]==0 ){
-			c++;
-			printf("\n   HeyHeyUU  %d ", c);
-			
+			c++;	
 			// the (c-1)th row is the boundary between blank / non-blank 
 			tRowPos[c-1][1] = i; 
 		}
@@ -305,10 +304,11 @@ int main( int argc, char *argv[])
 		int trainCol[14][2] = {   ........	{383,413}, {414,443}   };
 		int trainRow[5][2] = { {7,52},.......};
 		/*************************/	
-		trainCoord[ID][0] = trainRow[quotient][0];
-		trainCoord[ID][1] = trainRow[quotient][1];	
-		trainCoord[ID][2] = trainCol[remainderNum][0];		
-		trainCoord[ID][3] = trainCol[remainderNum][1];
+		trainCoord[ID][0] = trainCol[remainderNum][0]; // left	
+		trainCoord[ID][1] = trainCol[remainderNum][1]; // right
+		trainCoord[ID][2] = trainRow[quotient][0];	  // top
+		trainCoord[ID][3] = trainRow[quotient][1];	  // down
+
 	}
 	
 
@@ -321,19 +321,21 @@ int main( int argc, char *argv[])
 
 	int top, down, left, right;
 	for( ID=0; ID<70; ID++ ){
-		top  = trainCoord[ID][0];
-		down = trainCoord[ID][1];
-		left = trainCoord[ID][2];
-		right= trainCoord[ID][3];
-		get_bitQ( top, down, left, right, ID, 2 );
+		left = trainCoord[ID][0];
+		right= trainCoord[ID][1];
+		top  = trainCoord[ID][2];
+		down = trainCoord[ID][3];
+		get_bitQ( left, right, top, down, ID, 2 );
 	}
 	
 	for( ID=0; ID<5; ID++ ){
-		top  = captCoord[ID][0];
-		down = captCoord[ID][1];
-		left = captCoord[ID][2];
-		right= captCoord[ID][3];
-		get_bitQ( top, down, left, right, ID, 1 );
+
+		left = captCoord[ID][0];
+		right= captCoord[ID][1];
+		top  = captCoord[ID][2];
+		down = captCoord[ID][3];
+		
+		get_bitQ( left, right, top, down, ID, 1 );
 	}
 	
 					/*********************************************************/
@@ -341,10 +343,40 @@ int main( int argc, char *argv[])
 					/***       compute captchaVector by calling bitQ() function
 					/***     
 					/*********************************************************/
-
+	float temp1, temp2;
+	for( i=0; i<5; i++ ){
+		temp1 = 0;
+		for( j=0; j<70; j++ ){
+			temp2 = 0;
+			for( c=0 ; c<3; c++ ){
+				temp1 =  captchaVec[i][c] - trainVector[j][c] ;
+				temp2 += temp1 * temp1; 
+			}	
+			diff[i][j] = sqrt(temp2); 
+		}
+	}
 	
-	
-	
+	float min = 2000;
+	int minID = -1;
+	for( i=0; i<5; i++ ){
+		printf("\n\n\n-------------");
+		min = 2000;
+		minID = -1;
+		for( j=0; j<70; j++ ){
+			
+			//if(diff[i][j]>1000)
+			//printf("\ndiff[%d][%d] is %f\n", i,j, diff[i][j]);
+		   if( diff[i][j] < min )
+			{
+				//printf("     ..   %d   ..   ",j );
+				min = diff[i][j];
+				minID = j; 
+				//break;
+			}
+		}
+		printf("\n the %d-th word is %d.", i, minID );
+		printf("\ndiff[%d][%d] is %f\n", i,minID, diff[i][minID]);
+	}
 	
 	
 	
@@ -356,12 +388,31 @@ int main( int argc, char *argv[])
 	
 	
 	/********				Block partly the image   ******/
-	for( i = 0; i< 147; i++ ){
-		for( j=0; j<Size2; j++ ){
-			rmvBg[i][j] = 0;
+	for( i = trainCoord[22][0]; i< trainCoord[22][1]; i++ ){
+		for( j=trainCoord[22][2]; j<trainCoord[22][3]; j++ ){
+			//trmvBg[i][j] = 0;
+		}
+	}	
+	
+		/********				Block partly the image   ******/
+	for( i = 7; i< 52; i++ ){
+		for( j=132; j<162; j++ ){
+			//trmvBg[i][j] = 0;
 		}
 	}
+	/********				Block partly the image   ******/
+	for( i = captCoord[3][0]; i< captCoord[3][1]; i++ ){
+		for( j=captCoord[3][2]; j<captCoord[3][3]; j++ ){
+			rmvBg[i][j] = 0;
+		}
+	}	
 	
+	
+	/********************************************
+	for(i=0;i<5;i++){
+		printf("\n worPos %d %d", wordPos[i][0], wordPos[i][1]);
+		}
+	/********************************************/
 	
 						/********************************************/
 						/******                                ******/
