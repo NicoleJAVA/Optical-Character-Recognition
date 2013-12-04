@@ -54,7 +54,7 @@ void get_bitQ(int left,int right,int top,int down, int wordID, int option)
 		option == 2   --->   get the bit quads from trmvBg[][] ("training.raw")
 		
 	/**************/
-	printf("\n   ID: %d", wordID);
+	//printf("\n   ID: %d", wordID);
    for( i=top; i<down; i++ ){
 		//printf("\n\n");
 		for( j=left; j<right; j++ ){
@@ -120,14 +120,15 @@ void get_bitQ(int left,int right,int top,int down, int wordID, int option)
    	/* Euler Number using 8-Connectivity */
 		trainVector[wordID][2] =  0.25 * (Q[0] - Q[2] - 2*Q[4]);
 	}
-	
+	/*************************************
 	if( wordID == 4 ){
-			printf("\n\n\nleft:%d right:%d top %d down%d", left,right,top,down);
-	for( i=0; i<5; i++ ){
-	
-		printf("\n ID is %d Q  %d.", ID, Q[i] );
+		printf("\n\n\nleft:%d right:%d top %d down%d", left,right,top,down);
+		for( i=0; i<5; i++ ){
+			printf("\n ID is %d Q  %d.", ID, Q[i] );
+		}
 	}
-}
+	*******************************/
+
 
 }
 
@@ -145,14 +146,14 @@ int main( int argc, char *argv[])
 						/****** Read "input.raw" into Imagedata[][]******/
 						/******                                	 ******/
 						/************************************************/							
-	if (!(file=fopen("captcha.raw","rb"))){
+	if (!(file=fopen(argv[1],"rb"))){
 		cout<<"Cannot open file!"<<endl;
 		exit(1);
 	}
 	fread(Imagedata, sizeof(unsigned char), Size*Size, file);
 	fclose(file);
 	
-	if (!(file=fopen("training.raw","rb"))){
+	if (!(file=fopen(argv[2],"rb"))){
 		cout<<"Cannot open file!"<<endl;
 		exit(1);
 	}
@@ -359,7 +360,7 @@ int main( int argc, char *argv[])
 	float min = 2000;
 	int minID = -1;
 	for( i=0; i<5; i++ ){
-		printf("\n\n\n-------------");
+		//printf("\n\n\n-------------");
 		min = 2000;
 		minID = -1;
 		for( j=0; j<70; j++ ){
@@ -394,13 +395,13 @@ int main( int argc, char *argv[])
 		}
 	}	
 	
-		/********				Block partly the image   ******/
+		/********				Block partly the image   ******
 	for( i = 7; i< 52; i++ ){
 		for( j=132; j<162; j++ ){
 			//trmvBg[i][j] = 0;
 		}
 	}
-	/********				Block partly the image   ******/
+	/********				Block partly the image   ******
 	for( i = captCoord[3][0]; i< captCoord[3][1]; i++ ){
 		for( j=captCoord[3][2]; j<captCoord[3][3]; j++ ){
 			rmvBg[i][j] = 0;
@@ -418,8 +419,8 @@ int main( int argc, char *argv[])
 						/******                                ******/
 						/******    write image to "M.raw"  ******/
 						/******                                ******/
-						/********************************************/		
-	if (  !(file=fopen("M.raw","wb"))  ){
+						/********************************************	
+	if (  !(file=fopen("binary_captha.raw","wb"))  ){
 		cout<<"Cannot open file!"<<endl;
 		exit(1);
 	}
@@ -428,7 +429,7 @@ int main( int argc, char *argv[])
 		fclose(file);
 	}
 	
-	if (  !(file=fopen("trainRmv.raw","wb"))  ){
+	if (  !(file=fopen("binary_training.raw","wb"))  ){
 		cout<<"Cannot open file!"<<endl;
 		exit(1);
 	}
@@ -436,7 +437,7 @@ int main( int argc, char *argv[])
 		fwrite( trmvBg, sizeof(unsigned char), Size1*Size2, file);
 		fclose(file);
 	}
-
+/********************************************/
 	system("PAUSE");
 	exit(0);
 
