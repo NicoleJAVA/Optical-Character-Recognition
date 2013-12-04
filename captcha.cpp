@@ -12,28 +12,19 @@
 #define endRow 180
 using namespace std;
 unsigned char rmvBg[Size][Size];
-struct BitQuadStruct{
-	double M11;
-	double M12;
-	double M21;
-//	double M22;
-	double Area;
-	double Peri;
-	double hei_ratio;
-	int Euler;
-	int Q[5]; // Q[0]=n{Q1}, Q[1]=n{Q2} ... etc 
-};
+
 int wordPos[5][2]; // word position : starting column and ending column
 int isBlankCol[Size];
 int flag, c, i, j, a, b, bits;
+double captchaVec[5][10];
 
-
+/*********************************************************************/
 
 void get_bitQ(int left,int right,int top,int down, int wordID)
 {
 	int Q[5];
 	for( i=0; i<5; i++ ) Q[i] = 0; 
-	int cc = 1;
+	int cc = 1, xxx=0;
    for( i=top; i<down; i++ ){
 		//printf("\n\n");
 		for( j=left; j<right; j++ ){
@@ -68,7 +59,7 @@ void get_bitQ(int left,int right,int top,int down, int wordID)
 				Q[3]++;
 			}
 			if( bits == 0 ) {
-				//printf("\n%d  xxxxxxxxxxxxx  ", i );
+				xxx ++;
 			
 			} // End - 3 - if
 				
@@ -76,8 +67,13 @@ void get_bitQ(int left,int right,int top,int down, int wordID)
    } // End - 1 - for 
    
    for( i=0; i<5; i++ ) printf("\n     %d", Q[i] );
+   printf("\n     %d", xxx );
+   
+   captchaVec[wordID][0] = 0.25*Q[0] + 0.5*Q[1] + 0.875*Q[2] + Q[3] + 0.75*Q[4]; 
+   
 }
 
+/*********************************************************************/
 
 int main( int argc, char *argv[])
 {
