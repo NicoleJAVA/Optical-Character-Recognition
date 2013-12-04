@@ -8,27 +8,83 @@
 #define Size 256
 #define ThreshUp 30
 #define ThreshLow 20
+#define startRow 120 
+#define endRow 180
 using namespace std;
-struct BitQuad{
+unsigned char rmvBg[Size][Size];
+struct BitQuadStruct{
 	double M11;
 	double M12;
 	double M21;
 //	double M22;
-	double A;
-	double P;
+	double Area;
+	double Peri;
 	double hei_ratio;
 	int Euler;
-	int Q[5];	
+	int Q[5]; // Q[0]=n{Q1}, Q[1]=n{Q2} ... etc 
 };
 int wordPos[5][2]; // word position : starting column and ending column
 int isBlankCol[Size];
-int flag, c;
+int flag, c, i, j, a, b, bits;
+
+
+
+void get_bitQ(int left,int right,int top,int down, int wordID)
+{
+	int Q[5];
+	for( i=0; i<5; i++ ) Q[i] = 0; 
+	int cc = 1;
+   for( i=top; i<down; i++ ){
+		//printf("\n\n");
+		for( j=left; j<right; j++ ){
+		   //printf("\n %d", cc );
+		   cc++;
+			bits = 0;
+		   
+			for( a=i; a<i+2; a++ ){
+				for( b=j; b<j+2; b++ ){
+					if( rmvBg[a][b] == 0 ) bits++;
+				}
+			}
+			if( bits == 1 ) {
+				//printf("\n%d  hi  ", i ); 
+				Q[0]++;
+			}
+			if( bits == 2 ) {
+				//printf("\n%d  yo  ", i );
+				if( ( rmvBg[a][b]==255 && rmvBg[a+1][b+1]==0 ) || ( rmvBg[a][b]==0 && rmvBg[a+1][b+1]==255 ) ){
+					Q[4] ++;
+				} 
+				else{
+					Q[1]++;
+				}
+			}
+			if( bits == 3 ) {
+				//printf("\n%d  yeee  ", i );
+				Q[2]++;
+			}
+			if( bits == 4 ) {
+				//printf("\n%d  UUuuu  ", i );
+				Q[3]++;
+			}
+			if( bits == 0 ) {
+				//printf("\n%d  xxxxxxxxxxxxx  ", i );
+			
+			} // End - 3 - if
+				
+		}	// End - 2 - for 
+   } // End - 1 - for 
+   
+   for( i=0; i<5; i++ ) printf("\n     %d", Q[i] );
+}
+
+
 int main( int argc, char *argv[])
 {
 	FILE *file;
 	unsigned char Imagedata[Size][Size];
-	unsigned char rmvBg[Size][Size];
-	int i,j, bwflag;
+//	unsigned char rmvBg[Size][Size];
+
 	
 						/************************************************/
 						/******                                	 ******/
@@ -48,7 +104,6 @@ int main( int argc, char *argv[])
 	}
 	
 	/**********************************	do some image processing task... ***/
-	bwflag = 0;
 	for( i=120; i<180; i++ ){
 		for( j=0; j<Size; j++ ){
 			if( Imagedata[i][j] > 50 ){
@@ -96,7 +151,15 @@ int main( int argc, char *argv[])
 		}
 	}
 	for(i=0;i<5;i++) printf("\n   %d   %d  ", wordPos[i][1], wordPos[i][2] ); 
-	
+
+
+	for( i=0; i<5; i++ ){
+			
+	}
+
+	get_bitQ( 101, 108, 120, 180, 1);
+
+
 						/********************************************/
 						/******                                ******/
 						/******     Constructing Element Type I 
@@ -123,5 +186,5 @@ int main( int argc, char *argv[])
 
 	system("PAUSE");
 	exit(0);
-}
 
+}
