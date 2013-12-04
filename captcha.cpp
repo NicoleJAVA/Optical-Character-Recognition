@@ -1,3 +1,5 @@
+/* Ver. 6 */
+
 
 #include "stdio.h"
 #include "iostream.h"
@@ -12,6 +14,8 @@
 #define endRow 180
 #define Size1 248
 #define Size2 450
+#define topbound 135
+#define bottombound 147
 using namespace std;
 unsigned char rmvBg[Size][Size];
 unsigned char trainImg[248][450];
@@ -26,9 +30,10 @@ int tBlankRow[Size2]; // t : training.raw
 int flag, c, i, j, a, b, bits, ID, quotient, remainderNum;
 float captchaVec[5][10];
 float trainVector[5][5];
-int trainCoord[70][5]; 
+int trainCoord[70][4]; 
 // for word whose ID == 12, int trainCoord[12][1] stores which row is the word's
 // top boundary .  top-down-left-right
+int captCoord[5][4];
 
 int trainCol[14][2] = {   { 5,36},{ 37,68}, { 69,99}, { 100,131}, {132,162}, 
 {163,193},{194,225}, {226,256}, {257,287}, {288,319}, {320,350}, {351,382},
@@ -269,40 +274,50 @@ int main( int argc, char *argv[])
 	
 	//for(i=0;i<10;i++) printf("\n  tRowPos %d   %d  ", tRowPos[i][1], tRowPos[i][2] ); 
 
+					/*********************************************************/
+					/****                               
+					/***       compute the top,down,left,right boundaries
+					/***		  for each characters in "training.raw". 
+					/***     
+					/*********************************************************/	
 
+		for( ID=0; ID<5; ID++ ){
+			
+			captCoord[ID][0] = 	wordPos[ID][0]; /* left boundary */
+			captCoord[ID][1] = 	wordPos[ID][1]; /* right boundary */
+			captCoord[ID][2] = 	135; /* top boundary */
+			captCoord[ID][3] = 	147; /* down boundary */
+
+		}
+
+					/*********************************************************/
+					/****                               
+					/***       compute the top,down,left,right boundaries
+					/***		  for each characters in "training.raw". 
+					/***     
+					/*********************************************************/	
 
 
 	for( ID=0; ID<70; ID++ ){
 		quotient = (int) ( (ID) / 14 );
 		remainderNum = ID - ( 14 * quotient );
-		if(ID==3)
-		printf("\n %d divided by 14 is %d, remainder is %d", ID, quotient, remainderNum );
-	
-/***********************************	
-	int trainCol[14][2] = {   { 5,36},{ 37,68}, { 69,99}, { 100,131}, {132,162}, 
-		{163,193},{194,225}, {226,256}, {257,287}, {288,319}, {320,350}, {351,382},
-		{383,413}, {414,443}   };
-	int trainRow[5][2] = { {7,52},{53,98},{99,145},{146,191},{192,237} };
-/*************************/	
-
+		/***********************************	
+		int trainCol[14][2] = {   ........	{383,413}, {414,443}   };
+		int trainRow[5][2] = { {7,52},.......};
+		/*************************/	
 		trainCoord[ID][0] = trainRow[quotient][0];
 		trainCoord[ID][1] = trainRow[quotient][1];	
 		trainCoord[ID][2] = trainCol[remainderNum][0];		
 		trainCoord[ID][3] = trainCol[remainderNum][1];
-		if(ID==3) printf(" \nID 3 top is %d", trainCoord[ID][0] );
 	}
 	
 
-
-	get_bitQ( 101, 108, 120, 180, 1, 1);
-
-
-						/********************************************/
-						/******                                ******/
-						/******    compute trainVector by calling bitQ() function
-						/******     
-						/******                                ******/
-						/********************************************/	
+					/*********************************************************/
+					/****                               
+					/***       compute trainVector by calling bitQ() function
+					/***       compute captchaVec by calling bitQ() function
+					/***     
+					/*********************************************************/	
 
 	int top, down, left, right;
 	for( ID=0; ID<70; ID++ ){
@@ -313,7 +328,39 @@ int main( int argc, char *argv[])
 		get_bitQ( top, down, left, right, ID, 2 );
 	}
 	
+	for( ID=0; ID<5; ID++ ){
+		top  = captCoord[ID][0];
+		down = captCoord[ID][1];
+		left = captCoord[ID][2];
+		right= captCoord[ID][3];
+		get_bitQ( top, down, left, right, ID, 1 );
+	}
 	
+					/*********************************************************/
+					/****                               
+					/***       compute captchaVector by calling bitQ() function
+					/***     
+					/*********************************************************/
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	/********				Block partly the image   ******/
+	for( i = 0; i< 147; i++ ){
+		for( j=0; j<Size2; j++ ){
+			rmvBg[i][j] = 0;
+		}
+	}
 	
 	
 						/********************************************/
